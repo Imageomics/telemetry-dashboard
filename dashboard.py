@@ -5,9 +5,9 @@ import json
 import dash
 from dash import Dash, html, dcc, Input, Output, State
 from dash.exceptions import PreventUpdate
-from components.query import get_data, get_species_options, get_images
+from components.query import get_data
 from components.graphs import make_hist_plot, make_map, make_pie_plot
-from components.divs import get_main_div, get_error_div, get_hist_div, get_map_div, get_img_div
+from components.divs import get_main_div, get_error_div, get_hist_div, get_map_div
 
 # Fixed style
 PRINT_STYLE = {'textAlign': 'center', 'color': 'MidnightBlue', 'margin-bottom' : 10}
@@ -37,7 +37,7 @@ app.layout = html.Div([
                                     html.Br(),
                                     html.P(["For further file requirements, please see the ",
                                             html.A("documentation",
-                                                    href="https://github.com/Imageomics/dashboard-prototype#how-it-works",
+                                                    href="https://github.com/Imageomics/telemetry-dashboard/tree/dev#how-it-works",
                                                     target='_blank'),
                                                     "."],
                                               style = PRINT_STYLE)],
@@ -76,39 +76,24 @@ def parse_contents(contents, filename):
         print(e)
         return json.dumps({'error': {'other': str(e)}})
     # Check for required columns
-    # If no lat/lon, disable Map View button
-    # If no image urls, disable sample image options
-    mapping = True
-    img_urls = True
-    features = ['Species', 'Subspecies', 'View', 'Sex', 'hybrid_stat', 'lat', 'lon', 'file_url', 'Image_filename']
-    included_features = []
+    #mapping = True
+    features = ['lat', 'lon']
     for feature in features:
         if feature not in list(df.columns):
-            if feature == 'lat' or feature == 'lon':
-                mapping = False
-            elif feature == 'file_url':
-                img_urls = False
-            elif feature == 'Image_filename':
-                # If 'Image_filename' missing, return missing column if 'file_url' is included.
-                if img_urls:
-                    return json.dumps({'error': {'feature': feature}})
-            else:
-                return json.dumps({'error': {'feature': feature}})
+            return json.dumps({'error': {'feature': feature}})
         else:
-            included_features.append(feature)
+            included_features = list(df.columns)
     
     # get dataset-determined static data:
         # the dataframe and categorical features - processed for map view if mapping is True
         # all possible species, subspecies
         # will likely include categorical options in later instance (sooner)
-    processed_df, cat_list = get_data(df, mapping, included_features)
-    all_species = get_species_options(processed_df)
+    processed_df, cat_list = get_data(df, included_features)
     # save data to dictionary to save as json 
     data = {
             'processed_df': processed_df.to_json(date_format = 'iso', orient = 'split'),
-            'all_species': all_species,
-            'mapping': mapping,
-            'images': img_urls
+            'cat_list': cat_list
+            #'mapping': mapping,
         }   
     return json.dumps(data)
 
@@ -133,19 +118,17 @@ def update_output(contents, filename):
 
 def get_visuals(jsonified_data):
     '''
-    Function that usese the processed and saved data to get the main div (histogram, pie chart, and image example options).
+    Function that usese the processed and saved data to get the main div (histogram and pie chart).
     Returns error div if error occurs in upload or essential features are missing.
     '''
     # load saved data
     data = json.loads(jsonified_data)
     if 'error' in data:
         return get_error_div(data['error'])
-    dff = pd.read_json(data['processed_df'], orient = 'split')
 
     # get divs
-    hist_div = get_hist_div(data['mapping'])
-    img_div = get_img_div(dff, data['all_species'], data['images'])
-    children = get_main_div(hist_div, img_div)
+    hist_div = get_hist_div(data['cat_list'])
+    children = get_main_div(hist_div, data['cat_list'])
 
     return children
 
@@ -175,10 +158,10 @@ def update_dist_view(n_clicks, children, jsonified_data):
     '''
     data = json.loads(jsonified_data)
     if n_clicks == 0 or n_clicks == None:
-        return get_hist_div(data['mapping'])
+        return get_hist_div(data['cat_list'])
     if n_clicks > 0:
         if children == "Show Histogram":
-            return get_hist_div(data['mapping'])
+            return get_hist_div(data['cat_list'])
         else:
             return get_map_div()
 
@@ -252,86 +235,6 @@ def update_pie_plot(var, jsonified_data):
     data = json.loads(jsonified_data)
     dff = pd.read_json(data['processed_df'], orient = 'split')
     return make_pie_plot(dff, var)
-
-# Image Section
-
-# Callback for Image Species Selection
-@app.callback(
-    Output(component_id = 'subspecies-show', component_property= 'options'),
-    Input(component_id = 'species-show', component_property = 'value'),
-    Input('memory', 'data')
-)
-
-def set_subspecies_options(selected_species, jsonified_data):
-    ''' 
-    Function to set subspecies options in dropdown based on user-selected species.
-
-    Parameters:
-    -----------
-    jsonified_data - Saved dictionary of DataFrame, species options, and mapping (boolean on lat/lon availability).
-
-    Returns: 
-    --------
-    list of subspecies options based on user-selected species. 
-    '''
-    data = json.loads(jsonified_data)
-    all_species = data['all_species']
-    return [{'label': i, 'value': i} for i in all_species[selected_species]]
-
-# Callback for Image Subspecies Selection
-@app.callback(
-    Output(component_id = 'subspecies-show', component_property= 'value'),
-    Input(component_id = 'subspecies-show', component_property = 'options')
-)
-
-def set_subspecies_value(available_options):
-    # Collect selected subspecies to display in multi-select dropdown.
-    return available_options[0]['value']
-
-# Image & Display Images Button Callback
-@app.callback(
-    Output('image-1', 'children'),
-    Input('display-img', 'n_clicks'),
-    Input('memory', 'data'),
-    State('subspecies-show', 'value'),
-    State('which-view', 'value'),
-    State('which-sex', 'value'),
-    State('hybrid?', 'value'),
-    State('num-images', 'value'),
-    prevent_initial_call = True
-)
-
-# Retrieve selected number of images
-def update_display(n_clicks, jsonified_data, subspecies, view, sex, hybrid, num_images):
-    '''
-    Function to retrieve the user-selected number of images adhering to their chosen parameters when the 'Display Images' button is pressed.
-    
-    Parameters:
-    -----------
-    n_clicks - Number of times the 'Display Images' button has been pressed.
-    jsonified_data - Saved dictionary of DataFrame, species options, and mapping (boolean on lat/lon availability).
-    subspecies - String. Subspecies of specimen selected by the user.
-    view - String. View of specimen selected by the user.
-    sex - String. Sex of specimen selected by the user.
-    hybrid - String. Hybrid status of specimen selected by the user.
-    num_images - Integer. Number of images requested by the user. Default value is 1 (in get_filename).
-    
-    Returns:
-    --------
-    Imgs - (Return of function call) List of html image elements with `src` element pointing to paths for the requested number of images matching given parameters.
-           Returns html header4 "No Such Images. Please make another selection." if no images matching parameters exist.
-           Returns html header4 "Please make a selection." If number of images isn't specified.
-    '''
-    if n_clicks > 0 and (view != [] and sex != [] and hybrid != []):
-        # Unpack json for saved dataframe
-        data = json.loads(jsonified_data)
-        dff = pd.read_json(data['processed_df'], orient = 'split')
-        return get_images(dff, subspecies, view, sex, hybrid, num_images)
-    elif n_clicks == 0:
-        return dash.no_update
-    else:
-        return html.H4("Please make a selection.", 
-                    style = {'color': 'MidnightBlue'})
 
 if __name__ == '__main__':
     app.run()

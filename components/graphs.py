@@ -43,6 +43,12 @@ def make_map(df, color_by):
     --------
     fig - Map of their locations.
     '''
+    bounding_radii = {.5: 'half_km',
+                      .4: '4-10_km',
+                      .3: '3-10_km',
+                      .2: '2-10_km',
+                      .1: 'tenth_km'}
+    radius = bounding_radii[color_by]
     df = df.copy()
     # only use entries that have valid lat & lon for mapping
     df = df.loc[df['lat-lon'].str.contains('unknown') == False]
@@ -50,9 +56,9 @@ def make_map(df, color_by):
                         lat = df.lat,
                         lon = df.lon,
                         projection = "natural earth",
-                        custom_data = ["Samples_at_locality", "Species_at_locality", "Subspecies_at_locality"],
-                        size = df.Samples_at_locality,
-                        color = color_by,
+                        custom_data = [radius], #, "Species_at_locality", "Subspecies_at_locality"],
+                        size = df[radius], # number of samples in chosen radius
+                        color = radius,
                         color_discrete_sequence = px.colors.qualitative.Bold,
                         title = "Distribution of Samples")
     
@@ -66,9 +72,7 @@ def make_map(df, color_by):
     fig.update_traces(hovertemplate = 
                         "Latitude: %{lat}<br>"+
                         "Longitude: %{lon}<br>" +
-                        "Samples at lat/lon: %{customdata[0]}<br>" +
-                        "Species at lat/lon: %{customdata[1]}<br>" +
-                        "Subspecies at lat/lon: %{customdata[2]}<br>"
+                        "Samples within chosen radius: %{customdata[0]}<br>"
     )
 
     return fig
@@ -86,16 +90,10 @@ def make_pie_plot(df, var):
     --------
     fig - Pie chart of the percentage breakdown of the `var` samples in the dataset.
     '''
-    if(var == 'Subspecies'):
-        pie_fig = px.pie(df,
-                 names = var,
-                 color_discrete_sequence = px.colors.qualitative.Bold,
-                 hover_data = ['Species'])
-    else:
-        pie_fig = px.pie(df,
-                 names = var,
-                 color_discrete_sequence = px.colors.qualitative.Bold)
-        pie_fig.update_traces(textposition = 'inside', textinfo = 'percent+label')
+    pie_fig = px.pie(df,
+                names = var,
+                color_discrete_sequence = px.colors.qualitative.Bold)
+    pie_fig.update_traces(textposition = 'inside', textinfo = 'percent+label')
 
     pie_fig.update_layout(title = {'text': f'Percentage Breakdown of {var}'})
 
