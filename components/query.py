@@ -64,7 +64,7 @@ def get_data(df, features):
 
 def get_points_in_radius(df, radius):
     '''
-    Function to find points within [radius] of latitude and longitude.
+    Function to find points within [radius] of latitude and longitude for all observations in DataFrame.
 
     Parameters:
     -----------
@@ -73,7 +73,7 @@ def get_points_in_radius(df, radius):
 
     Returns:
     --------
-    num_samples - Number of samples within the given radius of the point.
+    pts_per_lat_lon - List of the number of samples within the given radius for each point at which there's a sample.
 
     '''
     # Convert distance to degrees (approx)
@@ -81,21 +81,30 @@ def get_points_in_radius(df, radius):
     # Approx 111 km per degree near equator (for both lat and lon)
     rad_deg = radius/111 
     pts_per_lat_lon = []
-    print(radius)
 
+    # Filter out all points without known lat-lon values prior to checking comparison
+    filtered_df = df.loc[df['lat-lon'].str.contains('unknown') == False]
+
+    # still need to go through and watch for unknown so the list will match length of full df
     for point in df['lat-lon']:
-        temp = df.loc[df['lat-lon'] == point]
-        # Define boundary square around the coordinates
-        min_lat = temp.lat.values[0] - rad_deg
-        max_lat = temp.lat.values[0] + rad_deg
-        min_lon = temp.lon.values[0] - rad_deg
-        max_lon = temp.lon.values[0] + rad_deg
+        if 'unknown' in point:
+            num_samples = 'unknown'
+        else:
+            lat_lon = point.split("|")
+            lat = float(lat_lon[0])
+            lon = float(lat_lon[1])
+            # Define boundary square around the coordinates
+            min_lat = lat - rad_deg
+            max_lat = lat + rad_deg
+            min_lon = lon - rad_deg
+            max_lon = lon + rad_deg
 
-        filtered_df = df.loc[df['lat'] > min_lat]
-        filtered_df = filtered_df.loc[filtered_df['lat'] < max_lat]
-        filtered_df = filtered_df.loc[filtered_df['lon'] > min_lon]
-        filtered_df = filtered_df.loc[filtered_df['lon'] < max_lon]
+            filtered_df = filtered_df.loc[filtered_df['lat'].astype(float) > min_lat]
+            filtered_df = filtered_df.loc[filtered_df['lat'].astype(float) < max_lat]
+            filtered_df = filtered_df.loc[filtered_df['lon'].astype(float) > min_lon]
+            filtered_df = filtered_df.loc[filtered_df['lon'].astype(float) < max_lon]
+            num_samples = len(filtered_df)
 
-        pts_per_lat_lon.append(len(filtered_df))
+        pts_per_lat_lon.append(num_samples)
    
     return pts_per_lat_lon
