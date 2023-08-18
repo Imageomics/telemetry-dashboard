@@ -43,7 +43,7 @@ def get_hist_div(cat_list):
                                      'display': 'inline-flex', 
                                      'flex-wrap': 'wrap', 
                                      'flex-direction': 'row', 
-                                     'justify-content': 'space-between'})
+                                     'justifyContent': 'space-between'})
             ], style = HALF_DIV_STYLE
             ),
             
@@ -57,7 +57,7 @@ def get_hist_div(cat_list):
                                      'display': 'inline-flex', 
                                      'flex-wrap': 'wrap', 
                                      'flex-direction': 'row', 
-                                     'justify-content': 'space-between'})
+                                     'justifyContent': 'space-between'})
             ], style = HALF_DIV_STYLE
         ),
         
@@ -174,7 +174,7 @@ def get_main_div(hist_div, cat_list):
                                      'display': 'inline-flex', 
                                      'flex-wrap': 'wrap', 
                                      'flex-direction': 'row', 
-                                     'justify-content': 'space-between'}
+                                     'justifyContent': 'space-between'}
                             ),
             html.Br(),
         ] #, style = HALF_DIV_STYLE

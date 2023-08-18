@@ -17,17 +17,26 @@ def make_hist_plot(df, x_var, color_by, sort_by):
     '''
     if sort_by == 'alpha':
         df[x_var] = df[x_var].astype(str)
-        fig = px.histogram(df.sort_values(x_var),
-                        x = x_var,
+        df = df.sort_values(x_var)
+        fig = px.bar(df.groupby([x_var]).count().reset_index(),
+                     x = x_var,
                         color = color_by,
-                        color_discrete_sequence = px.colors.qualitative.Bold)
+                        color_continuous_scale = px.colors.sequential.Plasma)
     else:
         fig = px.histogram(df,
                         x = x_var,
                         color = color_by,
-                        color_discrete_sequence = px.colors.qualitative.Bold).update_xaxes(categoryorder = sort_by)
+                        colorscale = px.colors.qualitative.Bold).update_xaxes(categoryorder = sort_by)
 
-    fig.update_layout(title = {'text': f'Distribution of {x_var} Colored by {color_by}'})
+    fig.update_layout(title = {'text': f'Distribution of {x_var} Colored by {color_by}'},
+                      title_font_size = 20,
+                      legend_font_size = 10,
+                      margin = {
+                            'l': 30,
+                            'r': 20,
+                            't': 35,
+                            'b': 20
+                        })
 
     return fig
 
@@ -56,9 +65,9 @@ def make_map(df, color_by):
     fig = px.scatter_geo(df,
                         lat = df.lat,
                         lon = df.lon,
-                        projection = "natural earth",
+                        projection = "natural earth", # Note: mapbox doesn't zoom in close enough
                         custom_data = [radius], #, "Species_at_locality", "Subspecies_at_locality"],
-                        size = df[radius], # number of samples in chosen radius
+                        size = df[radius].to_list(), # number of samples in chosen radius
                         color = radius,
                         color_discrete_sequence = px.colors.qualitative.Bold,
                         title = "Distribution of Samples")
@@ -75,6 +84,16 @@ def make_map(df, color_by):
                         "Longitude: %{lon}<br>" +
                         "Samples within chosen radius: %{customdata[0]}<br>"
     )
+
+    fig.update_layout(
+        title_font_size = 20,
+        legend_font_size = 10,
+        margin = {
+            'l': 20,
+            'r': 20,
+            't': 35,
+            'b': 20
+        })
 
     return fig
 
@@ -96,6 +115,14 @@ def make_pie_plot(df, var):
                 color_discrete_sequence = px.colors.qualitative.Bold)
     pie_fig.update_traces(textposition = 'inside', textinfo = 'percent+label')
 
-    pie_fig.update_layout(title = {'text': f'Percentage Breakdown of {var}'})
+    pie_fig.update_layout(title = {'text': f'Percentage Breakdown of {var}'},
+                          title_font_size = 20,
+                          legend_font_size = 10,
+                          margin = {
+                                'l': 20,
+                                'r': 20,
+                                't': 35,
+                                'b': 20
+                            })
 
     return pie_fig
