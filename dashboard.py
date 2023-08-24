@@ -84,6 +84,17 @@ def parse_contents(contents, filename):
         else:
             included_features = list(df.columns)
     
+    # Check for lat/lon bounds & type 
+    try:
+        # Check lat and lon within appropriate ranges (lat: [-90, 90], lon: [-180, 180])
+        valid_lat = df['lat'].astype(float).between(-90, 90)
+        df.loc[~valid_lat, 'lat'] = 'unknown'
+        valid_lon = df['lon'].astype(float).between(-180, 180)
+        df.loc[~valid_lon, 'lon'] = 'unknown'
+    except ValueError as e:
+        print(e)
+        return json.dumps({'error': {'mapping': str(e)}})
+
     # get dataset-determined static data:
         # the dataframe and categorical features - processed for map view if mapping is True
         # all possible species, subspecies

@@ -15,6 +15,10 @@ SORT_LIST = [{'label': 'Alphabetical', 'value': 'alpha'},
                 {'label': 'Descending', 'value': 'sum descending'}]
 
 DOCS_URL = "https://github.com/Imageomics/telemetry-dashboard/tree/dev#how-it-works"
+DOCS_LINK = html.A("documentation",
+                    href=DOCS_URL,
+                    target='_blank',
+                    style = ERROR_STYLE)
 
 def get_hist_div(cat_list):
     '''
@@ -212,20 +216,24 @@ def get_error_div(error_dict):
                             html.H3("Source data does not have '" + feature + "' column. ",
                                     style = ERROR_STYLE),
                             html.H4(["Please see the ",
-                                        html.A("documentation",
-                                                href=DOCS_URL,
-                                                target='_blank',
-                                                style = ERROR_STYLE),
+                                        DOCS_LINK,
                                         " for list of required columns."], 
                                         style = ERROR_STYLE)
                         ])
+    elif 'mapping' in error_dict.keys():
+        error_msg = error_dict['mapping']
+        error_div = html.Div([
+                            html.H4("Latitude or longitude columns have non-numeric values: " + error_msg + ".",
+                                     style = ERROR_STYLE),
+                            html.H4(["Please see the ",
+                                     DOCS_LINK,
+                                     "."],
+                            style = ERROR_STYLE)
+        ])
     elif 'type' in error_dict.keys():
         error_div = html.Div([
                             html.H4(["The source file is not a valid CSV format, please see the ",
-                                     html.A("documentation", 
-                                            href=DOCS_URL,
-                                            target='_blank',
-                                            style = ERROR_STYLE),
+                                     DOCS_LINK,
                                      "."],
                             style = ERROR_STYLE)
         ])

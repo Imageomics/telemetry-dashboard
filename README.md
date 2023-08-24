@@ -5,12 +5,12 @@ Prototype data dashboard for analyzing telemetry data.
 ## How it works
 
 For full dashboard functionality, upload a CSV or XLS file with the following columns: 
-- `lat`*: Latitude at which image was taken or specimen was collected.
-- `lon`*: Longitude at which image was taken or specimen was collected.
+- `lat`*: Latitude at which image was taken or specimen was collected: number in [-90,90].
+- `lon`*: Longitude at which image was taken or specimen was collected: number in [-180,180].
 
 
 ***Note:** 
-- `lat` and `lon` columns are not required to utilize the dashboard, but there will be no map view if they are not included.
+- Blank (or null) entries are recorded as `unknown`, and thus excluded from map view.
 
 ## Running Dashboard
 

@@ -99,10 +99,9 @@ def get_points_in_radius(df, radius):
             min_lon = lon - rad_deg
             max_lon = lon + rad_deg
 
-            filtered_df = filtered_df.loc[filtered_df['lat'].astype(float) > min_lat]
-            filtered_df = filtered_df.loc[filtered_df['lat'].astype(float) < max_lat]
-            filtered_df = filtered_df.loc[filtered_df['lon'].astype(float) > min_lon]
-            filtered_df = filtered_df.loc[filtered_df['lon'].astype(float) < max_lon]
+            filtered_df = filtered_df.loc[filtered_df['lat'].astype(float).between(min_lat, max_lat)]
+            filtered_df = filtered_df.loc[filtered_df['lon'].astype(float).between(min_lon, max_lon)]
+
             num_samples = len(filtered_df)
 
         pts_per_lat_lon.append(num_samples)
