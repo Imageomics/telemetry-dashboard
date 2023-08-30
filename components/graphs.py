@@ -16,9 +16,9 @@ def make_hist_plot(df, x_var, color_by, sort_by):
     fig - Histogram of the distribution of the requested variable.
     '''
     if sort_by == 'alpha':
-        df[x_var] = df[x_var].astype(str)
-        df = df.sort_values(x_var)
-        fig = px.bar(df.groupby([x_var]).count().reset_index(),
+        df['sorted'] = df[x_var].astype(str)
+        df = df.sort_values('sorted')
+        fig = px.bar(df,
                      x = x_var,
                         color = color_by,
                         color_continuous_scale = px.colors.sequential.Plasma)
