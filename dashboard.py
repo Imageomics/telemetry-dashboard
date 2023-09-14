@@ -78,11 +78,19 @@ def parse_contents(contents, filename):
     # Check for required columns
     #mapping = True
     features = ['lat', 'lon']
+    included_features = list(df.columns)
     for feature in features:
-        if feature not in list(df.columns):
-            return json.dumps({'error': {'feature': feature}})
-        else:
-            included_features = list(df.columns)
+        if feature not in included_features:
+            if feature == 'lon':
+                if 'long' not in included_features:
+                    return json.dumps({'error': {'feature': feature}})
+                else:
+                    df = df.rename(columns = {"long": "lon"})
+                    included_features.remove('long')
+                    included_features.append('lon')
+            else:
+                return json.dumps({'error': {'feature': feature}})
+        included_features.sort()
     
     # Check for lat/lon bounds & type 
     try:

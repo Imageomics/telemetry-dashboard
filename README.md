@@ -6,7 +6,7 @@ Prototype data dashboard for analyzing telemetry data.
 
 For full dashboard functionality, upload a CSV or XLS file with the following columns: 
 - `lat`*: Latitude at which image was taken or specimen was collected: number in [-90,90].
-- `lon`*: Longitude at which image was taken or specimen was collected: number in [-180,180].
+- `lon`*: Longitude at which image was taken or specimen was collected: number in [-180,180]. `long` will also be accepted.
 
 
 ***Note:** 
