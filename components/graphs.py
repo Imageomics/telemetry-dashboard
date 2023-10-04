@@ -62,22 +62,19 @@ def make_map(df, color_by):
     df = df.copy()
     # only use entries that have valid lat & lon for mapping
     df = df.loc[df['lat-lon'].str.contains('unknown') == False]
-    fig = px.scatter_geo(df,
-                        lat = df.lat,
-                        lon = df.lon,
-                        projection = "natural earth", # Note: mapbox doesn't zoom in close enough
-                        custom_data = [radius], #, "Species_at_locality", "Subspecies_at_locality"],
-                        size = df[radius].to_list(), # number of samples in chosen radius
-                        color = radius,
-                        color_discrete_sequence = px.colors.qualitative.Bold,
-                        title = "Distribution of Samples")
     
-    fig.update_geos(fitbounds = "locations",
-                    showcountries = True, countrycolor = "Grey",
-                    showrivers = True,
-                    showlakes = True,
-                    showland = True, landcolor = "wheat",
-                    showocean = True, oceancolor = "LightBlue")
+    fig = px.scatter_mapbox(df,
+                            lat = "lat",
+                            lon = "lon",
+                            #projection = "natural earth",
+                            custom_data = [radius], #, "Species_at_locality", "Subspecies_at_locality"],
+                            size = df[radius].to_list(), # number of samples in chosen radius
+                            color = radius,
+                            color_discrete_sequence = px.colors.qualitative.Bold,
+                            title = "Distribution of Samples",
+                            zoom = 2,
+                            mapbox_style = "stamen-terrain",
+                            height = 700)
     
     fig.update_traces(hovertemplate = 
                         "Latitude: %{lat}<br>"+
@@ -93,7 +90,19 @@ def make_map(df, color_by):
             'r': 20,
             't': 35,
             'b': 20
-        })
+        },
+        mapbox_layers = [{
+            "below": "traces",
+            "sourcetype": "raster",
+            #"sourceattribution": "United States Geological Survey",
+            #"source": [ "https://basemap.nationalmap.gov/arcgis/rest/services/USGSImageryOnly/MapServer/tile/{z}/{y}/{x}"]
+            # Switches to white map when you get too close
+            # This one can zoom closer and has more detail (trees), but get grey "Map data not yet available" when you get too close
+            "sourceattribution": "Esri, Maxar, Earthstar Geographics, and the GIS User Community",
+            "source": ["https://services.arcgisonline.com/arcgis/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}"]
+            # Usage and Licensing (ArcGIS World Imagery): https://services.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer
+            # Style: https://roblabs.com/xyz-raster-sources/styles/arcgis-world-imagery.json
+        }])
 
     return fig
 
