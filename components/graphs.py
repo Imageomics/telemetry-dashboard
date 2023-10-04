@@ -23,10 +23,10 @@ def make_hist_plot(df, x_var, color_by, sort_by):
                         color = color_by,
                         color_continuous_scale = px.colors.sequential.Plasma)
     else:
-        fig = px.histogram(df,
+        fig = px.bar(df,
                         x = x_var,
                         color = color_by,
-                        colorscale = px.colors.qualitative.Bold).update_xaxes(categoryorder = sort_by)
+                        color_continuous_scale = px.colors.sequential.Plasma).update_xaxes(categoryorder = sort_by)
 
     fig.update_layout(title = {'text': f'Distribution of {x_var} Colored by {color_by}'},
                       title_font_size = 20,
